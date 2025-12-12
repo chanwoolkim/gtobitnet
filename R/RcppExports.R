@@ -9,7 +9,15 @@ logL1 <- function(y, d, r, gamma) {
     .Call('_tobitnet_logL1', PACKAGE = 'tobitnet', y, d, r, gamma)
 }
 
-tobitnet_innerC <- function(xin, yin, cin, lambda1, lambda2, pf1, pf2, delta_init, delta_0_init = 0, gamma_init = 1, eps = 1e-7, standardize = TRUE, maxit = 1e6) {
-    .Call('_tobitnet_tobitnet_innerC', PACKAGE = 'tobitnet', xin, yin, cin, lambda1, lambda2, pf1, pf2, delta_init, delta_0_init, gamma_init, eps, standardize, maxit)
+LprimeC2 <- function(xj, y, status, r, gamma, right) {
+    .Call('_tobitnet_LprimeC2', PACKAGE = 'tobitnet', xj, y, status, r, gamma, right)
+}
+
+logL2 <- function(y, status, r, gamma, right) {
+    .Call('_tobitnet_logL2', PACKAGE = 'tobitnet', y, status, r, gamma, right)
+}
+
+tobitnet_innerC <- function(xin, yin, cin, uin, lambda1, lambda2, pf1, pf2, delta_init, delta_0_init = 0, gamma_init = 1, eps = 1e-7, standardize = TRUE, maxit = 1e6) {
+    .Call('_tobitnet_tobitnet_innerC', PACKAGE = 'tobitnet', xin, yin, cin, uin, lambda1, lambda2, pf1, pf2, delta_init, delta_0_init, gamma_init, eps, standardize, maxit)
 }
 

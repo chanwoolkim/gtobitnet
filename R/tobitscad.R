@@ -37,7 +37,7 @@ tobitscad = function(x, y, c = 0, a = 3, iter = 3, nlambda = 100, lambda.factor 
     stopifnot(is.numeric(iter), iter == round(iter), is.finite(iter), iter >= 2, length(iter) == 1)
     
     #Initial lasso fit
-    tn1 = tobitnet(x, y, c = c, nlambda = nlambda, lambda.factor = lambda.factor,
+    tn1 = tobitnet(x, y, left = c, right = 1e10, nlambda = nlambda, lambda.factor = lambda.factor,
                    lambda1 = lambda, lambda2 = 0, pf1 = rep(1, p), pf2 = rep(1, p),
                    eps = eps, standardize = standardize, maxit = maxit, early.stop = early.stop)
     
@@ -64,7 +64,8 @@ tobitscad = function(x, y, c = 0, a = 3, iter = 3, nlambda = 100, lambda.factor 
             pfs = dscad(abs(delta[,l]), lambda = l1, a = a)/l1 
             
             #pass to tobitnet_innerC so pf1 can vary with lambda
-            tn = tobitnet_innerC(xin = x, yin = y, cin = c, lambda1 = l1, lambda2 = 0, pf1 = pfs, pf2 = rep(1, p),
+            # For backward compatibility with one-sided censoring, pass large right bound
+            tn = tobitnet_innerC(xin = x, yin = y, cin = c, uin = Inf, lambda1 = l1, lambda2 = 0, pf1 = pfs, pf2 = rep(1, p),
                                  delta_0_init = delta_0_init, delta_init = delta_init, gamma_init = gamma_init,
                                  eps = eps, standardize = standardize, maxit = maxit)
             if(!tn$KKT) warning("KKT conditions not satisfied. Try decreasing eps or increasing maxit.")
@@ -155,7 +156,7 @@ cv.tobitscad = function(x, y, c = 0, a = 3, iter = 3, nlambda = 100, lambda.fact
     #nfolds must be an integer between 2 and n (other argument checks covered by tobitnet and tobitscad)
     if(!is.numeric(nfolds) | nfolds != round(nfolds) | !(nfolds >= 2) | !(nfolds <= n) | !( is.finite(nfolds) ) | length(nfolds) != 1 ) stop("nfolds must be a single positive integer between 2 and the number of observations")
     
-    tn_init = tobitnet(x = x, y = y, c = c, nlambda = nlambda, lambda.factor = lambda.factor, 
+    tn_init = tobitnet(x = x, y = y, left = c, right = 1e10, nlambda = nlambda, lambda.factor = lambda.factor, 
                        lambda1 = lambda, lambda2 = 0, pf1 = rep(1,p), pf2 = rep(1,p), early.stop = early.stop, ...)
     lambda = tn_init$lambda1
     nlambda = length(lambda)

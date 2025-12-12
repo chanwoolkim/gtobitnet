@@ -1,4 +1,4 @@
-tobitnet = function(x, y, c = 0, nlambda = 100, lambda.factor = ifelse(n/2 < nvars, 0.05, 0.01), 
+tobitnet = function(x, y, left = 0, right = Inf, nlambda = 100, lambda.factor = ifelse(n/2 < nvars, 0.05, 0.01), 
                     lambda1 = NULL, lambda2 = 0, pf1 = rep(1, nvars), pf2 = rep(1, nvars), eps = 1e-7, 
                     standardize = TRUE, maxit = 1e6, early.stop = TRUE){
     this.call = match.call()
@@ -33,8 +33,13 @@ tobitnet = function(x, y, c = 0, nlambda = 100, lambda.factor = ifelse(n/2 < nva
     if(length(y) != n) stop("the number of observations in y is not equal to the number of rows in x")
     if(!is.numeric(y) | !all(is.finite(y))) stop("y must be a vector with only finite, numeric entries")
     
-    #c is numeric and scalar
-    if(!is.numeric(c) | length(c) != 1 | !is.finite(c)) stop("c must be a finite scalar") 
+    #left and right are numeric and scalar, right > left
+    if(!is.numeric(left) | length(left) != 1 | !is.finite(left)) stop("left must be a finite scalar")
+    if(!is.numeric(right) | length(right) != 1 | !is.finite(right)) stop("right must be a finite scalar")
+    if(right <= left) stop("right must be greater than left")
+    
+    # For backward compatibility, keep 'c' name internally
+    c = left 
     
     #lambda1 and lambda2 are numeric, positive, and finite
     if(!is.null(lambda1)){
@@ -71,10 +76,24 @@ tobitnet = function(x, y, c = 0, nlambda = 100, lambda.factor = ifelse(n/2 < nva
     #early.stop is boolean
     stopifnot( is.logical(early.stop), length(early.stop) == 1 )
     
-    d = (y > c)
+    # Create status vector: 0 = uncensored, 1 = left censored, 2 = right censored
+    status = integer(n)
+    status[y <= left] = 1L
+    status[y >= right] = 2L
+    status[y > left & y < right] = 0L
+    
+    # For backward compatibility, also create d (uncensored indicator)
+    d = (status == 0)
+    
+    # Internal y and right bound (shifted so left = 0)
+    y_int = y - left
+    # Use large finite value if right is Inf (for one-sided censoring)
+    right_int = if(is.finite(right)) right - left else 1e10
     
     #Fit null model and get fitted values
-    mod_null = tobitnet_innerC(xin = matrix(0, 0, 0), yin = y, cin = c, lambda1 = 0, lambda2 = lambda2, pf1 = pf1, pf2 = pf2, delta_init = rep(0,p), eps = eps, standardize = F, maxit = maxit)
+    # Pass finite right value to C++ (use large value if Inf)
+    right_for_cpp = if(is.finite(right)) right else 1e10
+    mod_null = tobitnet_innerC(xin = matrix(0, 0, 0), yin = y, cin = c, uin = right_for_cpp, lambda1 = 0, lambda2 = lambda2, pf1 = pf1, pf2 = pf2, delta_init = rep(0,p), eps = eps, standardize = F, maxit = maxit)
     if(!mod_null$KKT) warning("KKT conditions not satisfied. Try decreasing eps or increasing maxit.")
     r_null = rep(mod_null$d0, n)
     gamma_null = mod_null$gamma
@@ -84,7 +103,7 @@ tobitnet = function(x, y, c = 0, nlambda = 100, lambda.factor = ifelse(n/2 < nva
         if(!standardize) x_check = x
         
         #Compute lambda max
-        l1max = max( vapply(1:p, function(j) abs( sum( LprimeC(xj = x_check[,j], y = y-c, d = d, r = r_null, gamma = gamma_null) )/n ), FUN.VALUE = numeric(1) ) )
+        l1max = max( vapply(1:p, function(j) abs( sum( LprimeC2(xj = x_check[,j], y = y_int, status = status, r = r_null, gamma = gamma_null, right = right_int) )/n ), FUN.VALUE = numeric(1) ) )
         l1min = l1max*lambda.factor
         
         llseq = seq(log(l1max), log(l1min), length.out = nlambda)
@@ -105,13 +124,13 @@ tobitnet = function(x, y, c = 0, nlambda = 100, lambda.factor = ifelse(n/2 < nva
     beta_mat = matrix(0, nrow = p, ncol = nlambda)
     
     #Compute null deviance
-    null_dev = -2*sum( logL1(y = y-c, d = d, r = r_null, gamma = gamma_null) )
+    null_dev = -2*sum( logL2(y = y_int, status = status, r = r_null, gamma = gamma_null, right = right_int) )
     dev = rep(0, nlambda)
     
     #Fit sequence of tobitnets along lambda1 path
     for(l in 1:nlambda){
         l1 = lambda1[l]
-        tn = tobitnet_innerC(xin = x, yin = y, cin = c, lambda1 = l1, lambda2 = lambda2, pf1 = pf1, pf2 = pf2,
+        tn = tobitnet_innerC(xin = x, yin = y, cin = c, uin = right_for_cpp, lambda1 = l1, lambda2 = lambda2, pf1 = pf1, pf2 = pf2,
                             delta_0_init = delta_0_init, delta_init = delta_init, gamma_init = gamma_init,
                             eps = eps, standardize = standardize, maxit = maxit)
         if(!tn$KKT) warning("KKT conditions not satisfied. Try decreasing eps or increasing maxit.")
@@ -122,7 +141,7 @@ tobitnet = function(x, y, c = 0, nlambda = 100, lambda.factor = ifelse(n/2 < nva
         #Compute deviance
         delta_pred = matrix(tn$beta*tn$gamma, nrow = p, ncol = 1)
         r_temp = x%*%delta_pred + rep((tn$b0 - c)*tn$gamma, n)
-        dev[l] = -2*sum( logL1(y = y-c, d = d, r = r_temp, gamma = tn$gamma) )
+        dev[l] = -2*sum( logL2(y = y_int, status = status, r = r_temp, gamma = tn$gamma, right = right_int) )
 
         #Stop early if the deviance is barely changing
         if(early.stop == T & l > 2){
@@ -149,6 +168,8 @@ tobitnet = function(x, y, c = 0, nlambda = 100, lambda.factor = ifelse(n/2 < nva
                 b0 = b0_vec[1:nlambda],
                 beta = beta_final,
                 c = c,
+                left = left,
+                right = right,
                 lambda1 = lambda1[1:nlambda], 
                 lambda2 = lambda2,
                 dev = dev[1:nlambda],
@@ -176,6 +197,8 @@ predict.tobitnet = function(object, newx, lambda1 = NULL, type = c("censored", "
     if(p != nrow(object$beta)) stop("newx must have the same number of columns as the matrix x used to fit the model")
     
     c = object$c
+    left = if(is.null(object$left)) c else object$left
+    right = if(is.null(object$right)) Inf else object$right
     
     if(!is.null(lambda1)){
         object = update(object, lambda1 = lambda1, c = c , ...)
@@ -185,13 +208,13 @@ predict.tobitnet = function(object, newx, lambda1 = NULL, type = c("censored", "
     
     r = newx%*%object$beta + matrix(1, nrow = n, ncol = 1)%*%beta_0
     if(type == 'censored'){
-        r = pmax(r, c)
+        r = pmax(pmin(r, right), left)
     }
     
     return( r )
 }
 
-cv.tobitnet = function(x, y, c = 0, lambda1 = NULL, nfolds = 10, early.stop = TRUE, type.measure = c("mse", "deviance", "mae"), ...){
+cv.tobitnet = function(x, y, left = 0, right = Inf, lambda1 = NULL, nfolds = 10, early.stop = TRUE, type.measure = c("mse", "deviance", "mae"), ...){
     type.measure = match.arg(type.measure)
     this.call = match.call()
     n = nrow(x)
@@ -202,22 +225,29 @@ cv.tobitnet = function(x, y, c = 0, lambda1 = NULL, nfolds = 10, early.stop = TR
     #nfolds must be an integer between 2 and n (other argument checks covered by tobitnet)
     if(!is.numeric(nfolds) | nfolds != round(nfolds) | !(nfolds >= 2) | !(nfolds <= n) | !( is.finite(nfolds) ) | length(nfolds) != 1 ) stop("nfolds must be a single positive integer between 2 and the number of observations")
     
-    tn_init = tobitnet(x = x, y = y, c = c, lambda1 = lambda1, early.stop = early.stop, ...)
+    # For backward compatibility, keep 'c' name
+    c = left
+    
+    tn_init = tobitnet(x = x, y = y, left = left, right = right, lambda1 = lambda1, early.stop = early.stop, ...)
     lambda1 = tn_init$lambda1
     nlambda = length(lambda1)
     
-    #Fold assignments
-    nonzero_indices = which(y > c)
-    n_nz = length(nonzero_indices)
+    #Fold assignments - split by censoring status
+    uncensored_indices = which(y > left & y < right)
+    left_censored_indices = which(y <= left)
+    right_censored_indices = which(y >= right)
+    
+    n_unc = length(uncensored_indices)
+    n_left = length(left_censored_indices)
+    n_right = length(right_censored_indices)
 
-    zero_indices = which(y == c)
-    n_z = length(zero_indices)
-
-    nperfold_nz = floor(n_nz/nfolds)
-    unfolded_entries_nz = nonzero_indices
-
-    nperfold_z = floor(n_z/nfolds)
-    unfolded_entries_z = zero_indices
+    nperfold_unc = floor(n_unc/nfolds)
+    nperfold_left = floor(n_left/nfolds)
+    nperfold_right = floor(n_right/nfolds)
+    
+    unfolded_entries_unc = uncensored_indices
+    unfolded_entries_left = left_censored_indices
+    unfolded_entries_right = right_censored_indices
     
     #CV loop setup
     foldlist <- list()
@@ -225,19 +255,22 @@ cv.tobitnet = function(x, y, c = 0, lambda1 = NULL, nfolds = 10, early.stop = TR
     
     for(i in 1:nfolds){
         if(i < nfolds){
-            fold_nz = sample(unfolded_entries_nz, nperfold_nz)
-            fold_z = sample(unfolded_entries_z, nperfold_z)
+            fold_unc = sample(unfolded_entries_unc, nperfold_unc)
+            fold_left = sample(unfolded_entries_left, nperfold_left)
+            fold_right = sample(unfolded_entries_right, nperfold_right)
 
-            unfolded_entries_nz = setdiff(unfolded_entries_nz, fold_nz)
-            unfolded_entries_z = setdiff(unfolded_entries_z, fold_z)
+            unfolded_entries_unc = setdiff(unfolded_entries_unc, fold_unc)
+            unfolded_entries_left = setdiff(unfolded_entries_left, fold_left)
+            unfolded_entries_right = setdiff(unfolded_entries_right, fold_right)
         } else {
-            fold_nz = unfolded_entries_nz
-            fold_z = unfolded_entries_z
+            fold_unc = unfolded_entries_unc
+            fold_left = unfolded_entries_left
+            fold_right = unfolded_entries_right
         }
-        foldlist[[i]] = c(fold_nz, fold_z)
+        foldlist[[i]] = c(fold_unc, fold_left, fold_right)
         fold_size = length(foldlist[[i]])
         
-        tn = tobitnet(x = x[-foldlist[[i]], ], y = y[-foldlist[[i]] ], c = c, lambda1 = lambda1, early.stop = F, ...)
+        tn = tobitnet(x = x[-foldlist[[i]], ], y = y[-foldlist[[i]] ], left = left, right = right, lambda1 = lambda1, early.stop = F, ...)
         
         if(type.measure == "mse"){
             preds = predict(tn, newx = x[foldlist[[i]],], type = "censored") #n x nlambda
@@ -248,9 +281,18 @@ cv.tobitnet = function(x, y, c = 0, lambda1 = NULL, nfolds = 10, early.stop = TR
             r_abs = abs(matrix(y[ foldlist[[i]] ], nrow = length(foldlist[[i]]), ncol = nlambda) - preds)
             err_mat[i,] = colMeans(r_abs)
         } else if(type.measure == "deviance"){
+            # Create status for fold
+            status_fold = integer(fold_size)
+            y_fold = y[foldlist[[i]]]
+            status_fold[y_fold <= left] = 1L
+            status_fold[y_fold >= right] = 2L
+            status_fold[y_fold > left & y_fold < right] = 0L
+            y_fold_int = y_fold - left
+            right_int = right - left
+            
             delta_pred = tn$beta/rep(tn$sigma, each = nrow(tn$beta))
             r_temp = as.matrix(x[ foldlist[[i]], ])%*%delta_pred + matrix( rep((tn$b0 - c)/tn$sigma, each = fold_size), nrow = fold_size, ncol = length(tn$sigma))
-            err_mat[i,] = vapply(1:ncol(r_temp), function(j) -2*sum(logL1(y = y[ foldlist[[i]] ]-c, d = (y[ foldlist[[i]] ] > c), r = r_temp[,j], gamma = 1/tn$sigma[j])), numeric(1) ) 
+            err_mat[i,] = vapply(1:ncol(r_temp), function(j) -2*sum(logL2(y = y_fold_int, status = status_fold, r = r_temp[,j], gamma = 1/tn$sigma[j], right = right_int)), numeric(1) ) 
         }
     }
     
