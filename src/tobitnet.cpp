@@ -94,6 +94,52 @@ NumericVector logL2(NumericVector y, IntegerVector status, NumericVector r, doub
 	return out;
 }
 
+double newton_gamma_two_sided(double gamma, NumericVector y, IntegerVector status, NumericVector r, double R, int max_newton = 30, double tol = 1e-10){
+    for(int it = 0; it < max_newton; it++){
+        double grad = 0.0;
+        double hess = 0.0;
+
+        double invg = 1.0 / gamma;
+        double invg2 = invg * invg;
+
+        for(int i = 0; i < y.size(); i++){
+            if(status[i] == 0){
+                // uncensored
+                double t = gamma * y[i] - r[i];
+                grad += invg - y[i] * t;                 // 1/gamma - y*(gamma*y - r)
+                hess += -invg2 - y[i] * y[i];            // -1/gamma^2 - y^2
+            } else if(status[i] == 2){
+                // right censored
+                double z = r[i] - gamma * R;
+                double gz = g(z);                        // phi/Φ (Mills ratio)
+                grad += -R * gz;
+                hess += -R * R * gz * (z + gz);          // uses g'(z) = -g(z)(z+g(z))
+            }
+            // status==1 left-censored: no gamma terms
+        }
+
+        // Safety: if hess is ~0, bail
+        if(!R_finite(hess) || std::abs(hess) < 1e-14) break;
+
+        double step = grad / hess;       // hess should be negative typically
+        double gamma_new = gamma - step;
+
+        // enforce positivity with simple backtracking if needed
+        if(gamma_new <= 0 || !R_finite(gamma_new)){
+            gamma_new = 0.5 * gamma;
+        }
+
+        // convergence check (relative)
+        if(std::abs(step) < tol * std::max(1.0, gamma)){
+            gamma = gamma_new;
+            break;
+        }
+
+        gamma = gamma_new;
+    }
+    return gamma;
+}
+
 double soft(double z, double t){
 	double sgn = (z > 0) - (z < 0);
 	double out = std::max(0.0, std::abs(z) - t)*sgn;
@@ -290,6 +336,12 @@ List tobitnet_innerC(NumericMatrix xin, NumericVector yin, NumericVector cin, Nu
         //Update gamma
         double gb = - sum(y*r);
         gamma_current = (-gb + std::sqrt( pow(gb, 2) - 4*ga*gc))*ga2inv; 
+		// Update gamma (two-sided): Newton step on full two-sided loglik in gamma
+		gamma_current = newton_gamma_two_sided(
+			gamma_current, y, status, r, right_internal,
+			/*max_newton=*/30,
+			/*tol=*/1e-10
+		);
         
         double max_delta2 = max( pow(delta_step, 2) );
         if( std::max(max_delta2, pow(delta_0_step, 2) ) < eps || full_loop_check ) {
