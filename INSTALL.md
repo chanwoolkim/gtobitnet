@@ -17,13 +17,13 @@ Open R and run:
 install.packages(c("Rcpp", "devtools", "AER", "survival", "glmnet"))
 ```
 
-### 2. Install tobitnet from Local Source
+### 2. Install gtobitnet from Local Source
 
 Navigate to the package directory in R:
 
 ```r
 # Set working directory to the package root
-setwd("/path/to/weservus-tobitnet-2sided")
+setwd("/path/to/gtobitnet")
 
 # Generate Rcpp exports (required for C++ code)
 library(Rcpp)
@@ -37,7 +37,7 @@ install()
 ### 3. Load and Use
 
 ```r
-library(tobitnet)
+library(gtobitnet)
 
 # Test with two-sided censoring
 set.seed(123)
@@ -47,7 +47,7 @@ x <- matrix(rnorm(n * p), n, p)
 y <- pmax(pmin(x[,1] + rnorm(n), 1), 0)  # Censored at 0 and 1
 
 # Fit with two-sided censoring
-fit <- tobitnet(x, y, left = 0, right = 1, lambda1 = 0.01)
+fit <- gtobitnet(x, y, left = 0, right = 1, lambda1 = 0.01)
 print(fit)
 ```
 
@@ -61,12 +61,12 @@ If you do modify R or C++ code later:
 Once installed, you can use it from any R session:
 
 ```r
-library(tobitnet)
+library(gtobitnet)
 
 # Two-sided censoring
-fit <- tobitnet(x, y, left = 0, right = 1, ...)
+fit <- gtobitnet(x, y, left = 0, right = 1, ...)
 
 # One-sided (backward compatible)
-fit <- tobitnet(x, y, left = 0, right = 1e10, ...)
+fit <- gtobitnet(x, y, left = 0, right = 1e10, ...)
 ```
 

@@ -1,4 +1,4 @@
-tobitnet = function(x, y, left = 0, right = Inf, nlambda = 100, lambda.factor = ifelse(n/2 < nvars, 0.05, 0.01), 
+gtobitnet = function(x, y, left = 0, right = Inf, nlambda = 100, lambda.factor = ifelse(n/2 < nvars, 0.05, 0.01), 
                     lambda1 = NULL, lambda2 = 0, pf1 = rep(1, nvars), pf2 = rep(1, nvars), eps = 1e-7, 
                     standardize = TRUE, maxit = 1e6, early.stop = TRUE){
     this.call = match.call()
@@ -93,7 +93,7 @@ tobitnet = function(x, y, left = 0, right = Inf, nlambda = 100, lambda.factor = 
     #Fit null model and get fitted values
     # Pass finite right value to C++ (use large value if Inf)
     right_for_cpp = if(is.finite(right)) right else 1e10
-    mod_null = tobitnet_innerC(xin = matrix(0, 0, 0), yin = y, cin = c, uin = right_for_cpp, lambda1 = 0, lambda2 = lambda2, pf1 = pf1, pf2 = pf2, delta_init = rep(0,p), eps = eps, standardize = F, maxit = maxit)
+    mod_null = gtobitnet_innerC(xin = matrix(0, 0, 0), yin = y, cin = c, uin = right_for_cpp, lambda1 = 0, lambda2 = lambda2, pf1 = pf1, pf2 = pf2, delta_init = rep(0,p), eps = eps, standardize = F, maxit = maxit)
     if(!mod_null$KKT) warning("KKT conditions not satisfied. Try decreasing eps or increasing maxit.")
     r_null = rep(mod_null$d0, n)
     gamma_null = mod_null$gamma
@@ -127,10 +127,10 @@ tobitnet = function(x, y, left = 0, right = Inf, nlambda = 100, lambda.factor = 
     null_dev = -2*sum( logL2(y = y_int, status = status, r = r_null, gamma = gamma_null, right = right_int) )
     dev = rep(0, nlambda)
     
-    #Fit sequence of tobitnets along lambda1 path
+    #Fit sequence of gtobitnets along lambda1 path
     for(l in 1:nlambda){
         l1 = lambda1[l]
-        tn = tobitnet_innerC(xin = x, yin = y, cin = c, uin = right_for_cpp, lambda1 = l1, lambda2 = lambda2, pf1 = pf1, pf2 = pf2,
+        tn = gtobitnet_innerC(xin = x, yin = y, cin = c, uin = right_for_cpp, lambda1 = l1, lambda2 = lambda2, pf1 = pf1, pf2 = pf2,
                             delta_0_init = delta_0_init, delta_init = delta_init, gamma_init = gamma_init,
                             eps = eps, standardize = standardize, maxit = maxit)
         if(!tn$KKT) warning("KKT conditions not satisfied. Try decreasing eps or increasing maxit.")
@@ -174,10 +174,10 @@ tobitnet = function(x, y, left = 0, right = Inf, nlambda = 100, lambda.factor = 
                 lambda2 = lambda2,
                 dev = dev[1:nlambda],
                 nulldev = null_dev
-                ), class = "tobitnet"))
+                ), class = "gtobitnet"))
 }
 
-predict.tobitnet = function(object, newx, lambda1 = NULL, type = c("censored", "uncensored"), ...){
+predict.gtobitnet = function(object, newx, lambda1 = NULL, type = c("censored", "uncensored"), ...){
     type = match.arg(type)
     this.call = match.call()
     
@@ -214,7 +214,7 @@ predict.tobitnet = function(object, newx, lambda1 = NULL, type = c("censored", "
     return( r )
 }
 
-cv.tobitnet = function(x, y, left = 0, right = Inf, lambda1 = NULL, nfolds = 10, early.stop = TRUE, type.measure = c("mse", "deviance", "mae"), ...){
+cv.gtobitnet = function(x, y, left = 0, right = Inf, lambda1 = NULL, nfolds = 10, early.stop = TRUE, type.measure = c("mse", "deviance", "mae"), ...){
     type.measure = match.arg(type.measure)
     this.call = match.call()
     n = nrow(x)
@@ -222,13 +222,13 @@ cv.tobitnet = function(x, y, left = 0, right = Inf, lambda1 = NULL, nfolds = 10,
     
     if( any( c(is.null(p), p <= 1) ) ) stop("x must be a matrix with 2 or more columns")
     
-    #nfolds must be an integer between 2 and n (other argument checks covered by tobitnet)
+    #nfolds must be an integer between 2 and n (other argument checks covered by gtobitnet)
     if(!is.numeric(nfolds) | nfolds != round(nfolds) | !(nfolds >= 2) | !(nfolds <= n) | !( is.finite(nfolds) ) | length(nfolds) != 1 ) stop("nfolds must be a single positive integer between 2 and the number of observations")
     
     # For backward compatibility, keep 'c' name
     c = left
     
-    tn_init = tobitnet(x = x, y = y, left = left, right = right, lambda1 = lambda1, early.stop = early.stop, ...)
+    tn_init = gtobitnet(x = x, y = y, left = left, right = right, lambda1 = lambda1, early.stop = early.stop, ...)
     lambda1 = tn_init$lambda1
     nlambda = length(lambda1)
     
@@ -270,7 +270,7 @@ cv.tobitnet = function(x, y, left = 0, right = Inf, lambda1 = NULL, nfolds = 10,
         foldlist[[i]] = c(fold_unc, fold_left, fold_right)
         fold_size = length(foldlist[[i]])
         
-        tn = tobitnet(x = x[-foldlist[[i]], ], y = y[-foldlist[[i]] ], left = left, right = right, lambda1 = lambda1, early.stop = F, ...)
+        tn = gtobitnet(x = x[-foldlist[[i]], ], y = y[-foldlist[[i]] ], left = left, right = right, lambda1 = lambda1, early.stop = F, ...)
         
         if(type.measure == "mse"){
             preds = predict(tn, newx = x[foldlist[[i]],], type = "censored") #n x nlambda
@@ -311,10 +311,10 @@ cv.tobitnet = function(x, y, left = 0, right = Inf, lambda1 = NULL, nfolds = 10,
         lambda1.min = lambda1.min,
         lambda1.1se = lambda1.1se,
         type.measure = type.measure
-        ), class = "cv.tobitnet"))
+        ), class = "cv.gtobitnet"))
 }
 
-plot.cv.tobitnet = function(x, ...){
+plot.cv.gtobitnet = function(x, ...){
     if(x$type.measure == "mse"){ ylabel = "Mean-Squared Error" }
     else if(x$type.measure == "mae"){ ylabel = "Mean Absolute Error" }
     else if(x$type.measure == "deviance"){ ylabel = "Deviance" }
@@ -326,7 +326,7 @@ plot.cv.tobitnet = function(x, ...){
     abline(v = log(x$lambda1.1se), lty = "dotted")
 }
 
-plot.tobitnet = function(x, label = FALSE, ...){
+plot.gtobitnet = function(x, label = FALSE, ...){
     stopifnot( is.logical(label), length(label) == 1 )
     
     matplot(x = log(x$lambda1), y = t(x$beta), 

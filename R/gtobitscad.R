@@ -3,7 +3,7 @@ dscad = function(t, lambda, a){
 }
 
 #3 step LLA with SCAD penalty
-tobitscad = function(x, y, c = 0, a = 3, iter = 3, nlambda = 100, lambda.factor = ifelse(n/2 < nvars, 0.1, 0.05),
+gtobitscad = function(x, y, c = 0, a = 3, iter = 3, nlambda = 100, lambda.factor = ifelse(n/2 < nvars, 0.1, 0.05),
                      lambda = NULL, eps = 1e-7, standardize = TRUE, maxit = 1e6, early.stop = TRUE){
     this.call = match.call()
     
@@ -32,12 +32,12 @@ tobitscad = function(x, y, c = 0, a = 3, iter = 3, nlambda = 100, lambda.factor 
     
     d = (y > c)
     
-    #make sure a > 2 and iter >=2 (other argument checks are handled by tobitnet)
+    #make sure a > 2 and iter >=2 (other argument checks are handled by gtobitnet)
     stopifnot(is.numeric(a), is.finite(a), a > 2, length(a) == 1)
     stopifnot(is.numeric(iter), iter == round(iter), is.finite(iter), iter >= 2, length(iter) == 1)
     
     #Initial lasso fit
-    tn1 = tobitnet(x, y, left = c, right = 1e10, nlambda = nlambda, lambda.factor = lambda.factor,
+    tn1 = gtobitnet(x, y, left = c, right = 1e10, nlambda = nlambda, lambda.factor = lambda.factor,
                    lambda1 = lambda, lambda2 = 0, pf1 = rep(1, p), pf2 = rep(1, p),
                    eps = eps, standardize = standardize, maxit = maxit, early.stop = early.stop)
     
@@ -63,9 +63,9 @@ tobitscad = function(x, y, c = 0, a = 3, iter = 3, nlambda = 100, lambda.factor 
             l1 = lambda_path[l]
             pfs = dscad(abs(delta[,l]), lambda = l1, a = a)/l1 
             
-            #pass to tobitnet_innerC so pf1 can vary with lambda
+            #pass to gtobitnet_innerC so pf1 can vary with lambda
             # For backward compatibility with one-sided censoring, pass large right bound
-            tn = tobitnet_innerC(xin = x, yin = y, cin = c, uin = Inf, lambda1 = l1, lambda2 = 0, pf1 = pfs, pf2 = rep(1, p),
+            tn = gtobitnet_innerC(xin = x, yin = y, cin = c, uin = Inf, lambda1 = l1, lambda2 = 0, pf1 = pfs, pf2 = rep(1, p),
                                  delta_0_init = delta_0_init, delta_init = delta_init, gamma_init = gamma_init,
                                  eps = eps, standardize = standardize, maxit = maxit)
             if(!tn$KKT) warning("KKT conditions not satisfied. Try decreasing eps or increasing maxit.")
@@ -104,11 +104,11 @@ tobitscad = function(x, y, c = 0, a = 3, iter = 3, nlambda = 100, lambda.factor 
         c = c,
         lambda = lambda_path,
         dev = dev,
-        nulldev = null_dev), class = "tobitscad")
+        nulldev = null_dev), class = "gtobitscad")
         )
 }
 
-predict.tobitscad = function(object, newx, lambda = NULL, type = c("censored", "uncensored"), ...){
+predict.gtobitscad = function(object, newx, lambda = NULL, type = c("censored", "uncensored"), ...){
     type = match.arg(type)
     this.call = match.call()
     
@@ -143,7 +143,7 @@ predict.tobitscad = function(object, newx, lambda = NULL, type = c("censored", "
     return(r)
 }
 
-cv.tobitscad = function(x, y, c = 0, a = 3, iter = 3, nlambda = 100, lambda.factor = ifelse(n/2 < nvars, 0.1, 0.05), 
+cv.gtobitscad = function(x, y, c = 0, a = 3, iter = 3, nlambda = 100, lambda.factor = ifelse(n/2 < nvars, 0.1, 0.05), 
                         lambda = NULL, nfolds = 10, early.stop = TRUE, type.measure = c("mse", "deviance", "mae"), ...){
     type.measure = match.arg(type.measure)
     this.call = match.call()
@@ -153,10 +153,10 @@ cv.tobitscad = function(x, y, c = 0, a = 3, iter = 3, nlambda = 100, lambda.fact
     
     if( any( c(is.null(p), p <= 1) ) ) stop("x must be a matrix with 2 or more columns")
     
-    #nfolds must be an integer between 2 and n (other argument checks covered by tobitnet and tobitscad)
+    #nfolds must be an integer between 2 and n (other argument checks covered by gtobitnet and gtobitscad)
     if(!is.numeric(nfolds) | nfolds != round(nfolds) | !(nfolds >= 2) | !(nfolds <= n) | !( is.finite(nfolds) ) | length(nfolds) != 1 ) stop("nfolds must be a single positive integer between 2 and the number of observations")
     
-    tn_init = tobitnet(x = x, y = y, left = c, right = 1e10, nlambda = nlambda, lambda.factor = lambda.factor, 
+    tn_init = gtobitnet(x = x, y = y, left = c, right = 1e10, nlambda = nlambda, lambda.factor = lambda.factor, 
                        lambda1 = lambda, lambda2 = 0, pf1 = rep(1,p), pf2 = rep(1,p), early.stop = early.stop, ...)
     lambda = tn_init$lambda1
     nlambda = length(lambda)
@@ -192,7 +192,7 @@ cv.tobitscad = function(x, y, c = 0, a = 3, iter = 3, nlambda = 100, lambda.fact
         foldlist[[i]] = c(fold_nz, fold_z)
         fold_size = length(foldlist[[i]])
         
-        tscad = tobitscad(x = x[-foldlist[[i]], ], y = y[ -foldlist[[i]] ], c = c, a = a, iter = iter, lambda = lambda, early.stop = F, ...)
+        tscad = gtobitscad(x = x[-foldlist[[i]], ], y = y[ -foldlist[[i]] ], c = c, a = a, iter = iter, lambda = lambda, early.stop = F, ...)
         
         if(type.measure == "mse"){
             preds = predict(tscad, newx = x[foldlist[[i]],], type = "censored") #n x nlambda
@@ -223,10 +223,10 @@ cv.tobitscad = function(x, y, c = 0, a = 3, iter = 3, nlambda = 100, lambda.fact
         lambda.min = lambda.min,
         lambda.1se = lambda.1se,
         type.measure = type.measure
-    ), class = "cv.tobitscad"))
+    ), class = "cv.gtobitscad"))
 }
 
-plot.cv.tobitscad = function(x, ...){
+plot.cv.gtobitscad = function(x, ...){
     if(x$type.measure == "mse"){ ylabel = "Mean-Squared Error" }
     else if(x$type.measure == "mae"){ ylabel = "Mean Absolute Error" }
     else if(x$type.measure == "deviance"){ ylabel = "Deviance" }
@@ -238,7 +238,7 @@ plot.cv.tobitscad = function(x, ...){
     abline(v = log(x$lambda.1se), lty = "dotted")
 }
 
-plot.tobitscad = function(x, label = FALSE, ...){
+plot.gtobitscad = function(x, label = FALSE, ...){
     stopifnot( is.logical(label), length(label) == 1 )
     
     matplot(x = log(x$lambda), y = t(x$beta), 

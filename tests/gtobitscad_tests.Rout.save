@@ -15,8 +15,8 @@ Type 'demo()' for some demos, 'help()' for on-line help, or
 'help.start()' for an HTML browser interface to help.
 Type 'q()' to quit R.
 
-> #Tests for tobitscad
-> library(tobitnet)
+> #Tests for gtobitscad
+> library(gtobitnet)
 > 
 > set.seed(2022)
 > n = 100
@@ -26,8 +26,8 @@ Type 'q()' to quit R.
 > y = pmax(y, 0)
 > 
 > #Works with user-provided lambda1
-> tsout1 <- tobitscad(x = x, y = y, lambda = 0.1)
-> class(tsout1) == "tobitscad"
+> tsout1 <- gtobitscad(x = x, y = y, lambda = 0.1)
+> class(tsout1) == "gtobitscad"
 [1] TRUE
 > length(tsout1) == 8
 [1] TRUE
@@ -65,8 +65,8 @@ Type 'q()' to quit R.
 > 
 > #Works when x is a data frame
 > x.df = data.frame(x)
-> tsout1 <- tobitscad(x = x.df, y = y, lambda = 0.1)
-> class(tsout1) == "tobitscad"
+> tsout1 <- gtobitscad(x = x.df, y = y, lambda = 0.1)
+> class(tsout1) == "gtobitscad"
 [1] TRUE
 > length(tsout1) == 8
 [1] TRUE
@@ -103,8 +103,8 @@ Type 'q()' to quit R.
 [1] TRUE
 > 
 > #Works with different c, lambda, a, iter
-> tsout1 <- tobitscad(x = x, y = pmax(y,5), c = 5, a = 3.7, iter = 4, lambda = c(0.2, 0.3) )
-> class(tsout1) == "tobitscad"
+> tsout1 <- gtobitscad(x = x, y = pmax(y,5), c = 5, a = 3.7, iter = 4, lambda = c(0.2, 0.3) )
+> class(tsout1) == "gtobitscad"
 [1] TRUE
 > length(tsout1) == 8
 [1] TRUE
@@ -141,7 +141,7 @@ Type 'q()' to quit R.
 [1] TRUE
 > 
 > #Default arguments work
-> tsout1 <- tobitscad(x = x, y = y)
+> tsout1 <- gtobitscad(x = x, y = y)
 > is.numeric(tsout1$sigma)
 [1] TRUE
 > all(is.finite(tsout1$sigma))
@@ -178,10 +178,10 @@ Type 'q()' to quit R.
 [1] TRUE
 > 
 > #Works with standardize
-> tsout1sF <- tobitscad(x = x, y = y, lambda = 0.2, standardize = F)
+> tsout1sF <- gtobitscad(x = x, y = y, lambda = 0.2, standardize = F)
 > 
 > #Intercept column does not impact model fitting
-> tsout1b <- tobitscad(x = cbind(rep(1,n) ,x), y = y)
+> tsout1b <- gtobitscad(x = cbind(rep(1,n) ,x), y = y)
 > all.equal(tsout1$sigma, tsout1b$sigma)
 [1] TRUE
 > all.equal(tsout1$b0, tsout1b$b0)
@@ -197,7 +197,7 @@ Type 'q()' to quit R.
 > y = x%*%c(3, rep(0,4), 3, rep(0,4)) + rnorm(n,0,10)
 > 
 > y = pmax(y, 0)
-> tsout1 <- tobitscad(x = x, y = y)
+> tsout1 <- gtobitscad(x = x, y = y)
 > is.numeric(tsout1$sigma)
 [1] TRUE
 > all(is.finite(tsout1$sigma))

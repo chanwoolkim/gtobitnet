@@ -1,11 +1,11 @@
-\name{cv.tobitscad}
-\alias{cv.tobitscad}
-\title{Cross-validation for tobitscad}
+\name{cv.gtobitscad}
+\alias{cv.gtobitscad}
+\title{Cross-validation for gtobitscad}
 \description{
-  Performs k-fold cross-validation for the \code{lambda} penalty parameter for \code{tobitscad}.
+  Performs k-fold cross-validation for the \code{lambda} penalty parameter for \code{gtobitscad}.
 }
 \usage{
-cv.tobitscad(x, y, c = 0, a = 3, iter = 3, nlambda = 100, 
+cv.gtobitscad(x, y, c = 0, a = 3, iter = 3, nlambda = 100, 
   lambda.factor = ifelse(n/2 < nvars, 0.1, 0.05), lambda = NULL, 
   nfolds = 10, early.stop = TRUE, type.measure = c("mse", "deviance", "mae"),...)
 }
@@ -19,12 +19,12 @@ cv.tobitscad(x, y, c = 0, a = 3, iter = 3, nlambda = 100,
   \item{lambda.factor}{if \code{lambda} is not provided, this is the factor multiplied by \eqn{\lambda_{\max} }{\lambdamax}, the largest \eqn{\lambda} value in the automatically generated sequence for the solution path, to get \eqn{\lambda_{\min}}{\lambdamin}, the smallest \eqn{\lambda} value for the solution path. Default is 0.1 if \code{n/2 < nvars} and 0.05 otherwise.}
   \item{lambda}{vector of values for the SCAD penalty parameter \eqn{\lambda}. If this is not provided, then a \eqn{\lambda} path is automatically generated based on the values of \code{nlambda} and \code{lambda.factor}.}
   \item{nfolds}{number of folds. Default is 10.}
-  \item{early.stop}{allow \code{tobitscad} to stop early in the \code{lambda} sequence if the decrease in the deviance between \code{lambda} values is negligible. Default is \code{TRUE}.}
-  \item{type.measure}{loss function to use for cross-validation. The default is \code{type.measure = "mse"}. The other two options are \code{type.measure = "deviance"}, the Tobit deviance, and \code{type.measure = "mae"}, the mean absolute error.}
-  \item{...}{additional arguments for \code{tobitscad}}
+  \item{early.stop}{allow \code{gtobitscad} to stop early in the \code{lambda} sequence if the decrease in the deviance between \code{lambda} values is negligible. Default is \code{TRUE}.}
+  \item{type.measure}{loss function to use for cross-validation. The default is \code{type.measure = "mse"}. The other two options are \code{type.measure = "deviance"}, the gTobit deviance, and \code{type.measure = "mae"}, the mean absolute error.}
+  \item{...}{additional arguments for \code{gtobitscad}}
 }
 \value{
-  An object of class \dQuote{\code{cv.tobitscad}}
+  An object of class \dQuote{\code{cv.gtobitscad}}
  \item{call}{function call}
  \item{cvm}{mean-squared prediction errors from cross-validation - a vector of length \code{length(lambda)}}
  \item{cvsd}{estimate of the standard error of \code{cvm} - a vector of length \code{length(lambda)}}
@@ -43,7 +43,7 @@ Tate Jacobson\cr
 Maintainer: Tate Jacobson <jaco2583@umn.edu>
 }
 
-\seealso{\code{\link{tobitscad}}, \code{\link{predict.tobitscad}}}
+\seealso{\code{\link{gtobitscad}}, \code{\link{predict.gtobitscad}}}
 
 \examples{
 n <- 100
@@ -53,8 +53,8 @@ y <- 3 + x\%*\%c(5, 1, 2, 0.5, 0.1, rep(0, p - 5)) + rnorm(n,0,1)
 y <- pmax(y, 0)
 
 #With a user-provided lambda1
-cv.tscad1 <- cv.tobitscad(x = x, y = y, lambda = seq(0.1, 0.9, by = 0.1))
+cv.tscad1 <- cv.gtobitscad(x = x, y = y, lambda = seq(0.1, 0.9, by = 0.1))
 
 #With lambda1 automatically generated
-cv.tscad2 <- cv.tobitscad(x = x, y = y)
+cv.tscad2 <- cv.gtobitscad(x = x, y = y)
 }

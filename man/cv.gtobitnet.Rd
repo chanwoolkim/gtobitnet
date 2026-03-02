@@ -1,11 +1,11 @@
-\name{cv.tobitnet}
-\alias{cv.tobitnet}
-\title{Cross-validation for tobitnet}
+\name{cv.gtobitnet}
+\alias{cv.gtobitnet}
+\title{Cross-validation for gtobitnet}
 \description{
-  Performs k-fold cross-validation for the \code{lambda1} penalty parameter for \code{tobitnet}.
+  Performs k-fold cross-validation for the \code{lambda1} penalty parameter for \code{gtobitnet}.
 }
 \usage{
-cv.tobitnet(x, y, c = 0, lambda1 = NULL, nfolds = 10, early.stop = TRUE, 
+cv.gtobitnet(x, y, c = 0, lambda1 = NULL, nfolds = 10, early.stop = TRUE, 
   type.measure = c("mse", "deviance", "mae"), ...)
 }
 
@@ -15,13 +15,13 @@ cv.tobitnet(x, y, c = 0, lambda1 = NULL, nfolds = 10, early.stop = TRUE,
   \item{c}{left-censoring value for the response. Default is 0.}
   \item{lambda1}{vector of values for the lasso penalty parameter \eqn{\lambda_1}{\lambda1}. If this is not provided, then a \eqn{\lambda_1}{\lambda1} path is automatically generated based on the values of \code{nlambda} and \code{lambda.factor}}
   \item{nfolds}{number of folds. Default is 10.}
-  \item{early.stop}{allow \code{tobitnet} to stop early in the \code{lambda1} sequence if the decrease in the deviance between \code{lambda1} values is negligible. Default is \code{TRUE}.}
-  \item{type.measure}{loss function to use for cross-validation. The default is \code{type.measure = "mse"}. The other two options are \code{type.measure = "deviance"}, the Tobit deviance, and \code{type.measure = "mae"}, the mean absolute error.}
-  \item{...}{additional arguments for \code{tobitnet}}
+  \item{early.stop}{allow \code{gtobitnet} to stop early in the \code{lambda1} sequence if the decrease in the deviance between \code{lambda1} values is negligible. Default is \code{TRUE}.}
+  \item{type.measure}{loss function to use for cross-validation. The default is \code{type.measure = "mse"}. The other two options are \code{type.measure = "deviance"}, the gTobit deviance, and \code{type.measure = "mae"}, the mean absolute error.}
+  \item{...}{additional arguments for \code{gtobitnet}}
 }
 
 \value{
-  An object of class \dQuote{\code{cv.tobitnet}}
+  An object of class \dQuote{\code{cv.gtobitnet}}
  \item{call}{function call}
  \item{cvm}{mean-squared prediction errors from cross-validation - a vector of length \code{length(lambda1)}}
  \item{cvsd}{estimate of the standard error of \code{cvm} - a vector of length \code{length(lambda1)}}
@@ -41,7 +41,7 @@ Tate Jacobson\cr
 Maintainer: Tate Jacobson <jaco2583@umn.edu>
 }
 
-\seealso{\code{\link{tobitnet}}, \code{\link{predict.tobitnet}}}
+\seealso{\code{\link{gtobitnet}}, \code{\link{predict.gtobitnet}}}
 
 \examples{
 n <- 100
@@ -51,8 +51,8 @@ y <- 3 + x\%*\%c(5, 1, 2, 0.5, 0.1, rep(0, p - 5)) + rnorm(n,0,1)
 y <- pmax(y, 0)
 
 #With a user-provided lambda1
-cv.tnet1 <- cv.tobitnet(x = x, y = y, lambda1 = seq(0.1, 0.9, by = 0.1))
+cv.tnet1 <- cv.gtobitnet(x = x, y = y, lambda1 = seq(0.1, 0.9, by = 0.1))
 
 #With lambda1 automatically generated
-cv.tnet2 <- cv.tobitnet(x = x, y = y)
+cv.tnet2 <- cv.gtobitnet(x = x, y = y)
 }

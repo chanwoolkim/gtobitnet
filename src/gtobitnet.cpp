@@ -95,6 +95,11 @@ NumericVector logL2(NumericVector y, IntegerVector status, NumericVector r, doub
 }
 
 double newton_gamma_two_sided(double gamma, NumericVector y, IntegerVector status, NumericVector r, double R, int max_newton = 30, double tol = 1e-10){
+    // Guard against non-positive gamma to prevent division by zero
+    if(gamma <= 0 || !R_finite(gamma)){
+        return 1e-6;  // return small positive default
+    }
+    
     for(int it = 0; it < max_newton; it++){
         double grad = 0.0;
         double hess = 0.0;
@@ -111,7 +116,7 @@ double newton_gamma_two_sided(double gamma, NumericVector y, IntegerVector statu
             } else if(status[i] == 2){
                 // right censored
                 double z = r[i] - gamma * R;
-                double gz = g(z);                        // phi/Φ (Mills ratio)
+                double gz = g(z);                        // phi/(Mills ratio)
                 grad += -R * gz;
                 hess += -R * R * gz * (z + gz);          // uses g'(z) = -g(z)(z+g(z))
             }
@@ -129,8 +134,9 @@ double newton_gamma_two_sided(double gamma, NumericVector y, IntegerVector statu
             gamma_new = 0.5 * gamma;
         }
 
-        // convergence check (relative)
-        if(std::abs(step) < tol * std::max(1.0, gamma)){
+        // convergence check (relative) - use actual change in gamma, not raw Newton step
+        double actual_step = gamma - gamma_new;
+        if(std::abs(actual_step) < tol * std::max(1.0, gamma)){
             gamma = gamma_new;
             break;
         }
@@ -204,7 +210,7 @@ List standardizeC(NumericMatrix x){
 }
 
 //[[Rcpp::export]]
-List tobitnet_innerC(NumericMatrix xin, NumericVector yin, NumericVector cin, NumericVector uin, double lambda1, double lambda2, NumericVector pf1, NumericVector pf2, NumericVector delta_init, double delta_0_init = 0, double gamma_init = 1, double eps = 1e-7, bool standardize = true, double maxit = 1e6){
+List gtobitnet_innerC(NumericMatrix xin, NumericVector yin, NumericVector cin, NumericVector uin, double lambda1, double lambda2, NumericVector pf1, NumericVector pf2, NumericVector delta_init, double delta_0_init = 0, double gamma_init = 1, double eps = 1e-7, bool standardize = true, double maxit = 1e6){
 	NumericMatrix x = clone(xin);
 	NumericVector y = clone(yin);
 	NumericVector c = clone(cin);

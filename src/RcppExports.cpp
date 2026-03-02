@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // LprimeC
 NumericVector LprimeC(NumericVector xj, NumericVector y, LogicalVector d, NumericVector r, double gamma);
-RcppExport SEXP _tobitnet_LprimeC(SEXP xjSEXP, SEXP ySEXP, SEXP dSEXP, SEXP rSEXP, SEXP gammaSEXP) {
+RcppExport SEXP _gtobitnet_LprimeC(SEXP xjSEXP, SEXP ySEXP, SEXP dSEXP, SEXP rSEXP, SEXP gammaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -27,7 +27,7 @@ END_RCPP
 }
 // logL1
 NumericVector logL1(NumericVector y, LogicalVector d, NumericVector r, double gamma);
-RcppExport SEXP _tobitnet_logL1(SEXP ySEXP, SEXP dSEXP, SEXP rSEXP, SEXP gammaSEXP) {
+RcppExport SEXP _gtobitnet_logL1(SEXP ySEXP, SEXP dSEXP, SEXP rSEXP, SEXP gammaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -41,7 +41,7 @@ END_RCPP
 }
 // LprimeC2
 NumericVector LprimeC2(NumericVector xj, NumericVector y, IntegerVector status, NumericVector r, double gamma, double right);
-RcppExport SEXP _tobitnet_LprimeC2(SEXP xjSEXP, SEXP ySEXP, SEXP statusSEXP, SEXP rSEXP, SEXP gammaSEXP, SEXP rightSEXP) {
+RcppExport SEXP _gtobitnet_LprimeC2(SEXP xjSEXP, SEXP ySEXP, SEXP statusSEXP, SEXP rSEXP, SEXP gammaSEXP, SEXP rightSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -57,7 +57,7 @@ END_RCPP
 }
 // logL2
 NumericVector logL2(NumericVector y, IntegerVector status, NumericVector r, double gamma, double right);
-RcppExport SEXP _tobitnet_logL2(SEXP ySEXP, SEXP statusSEXP, SEXP rSEXP, SEXP gammaSEXP, SEXP rightSEXP) {
+RcppExport SEXP _gtobitnet_logL2(SEXP ySEXP, SEXP statusSEXP, SEXP rSEXP, SEXP gammaSEXP, SEXP rightSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -70,9 +70,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// tobitnet_innerC
-List tobitnet_innerC(NumericMatrix xin, NumericVector yin, NumericVector cin, NumericVector uin, double lambda1, double lambda2, NumericVector pf1, NumericVector pf2, NumericVector delta_init, double delta_0_init, double gamma_init, double eps, bool standardize, double maxit);
-RcppExport SEXP _tobitnet_tobitnet_innerC(SEXP xinSEXP, SEXP yinSEXP, SEXP cinSEXP, SEXP uinSEXP, SEXP lambda1SEXP, SEXP lambda2SEXP, SEXP pf1SEXP, SEXP pf2SEXP, SEXP delta_initSEXP, SEXP delta_0_initSEXP, SEXP gamma_initSEXP, SEXP epsSEXP, SEXP standardizeSEXP, SEXP maxitSEXP) {
+// gtobitnet_innerC
+List gtobitnet_innerC(NumericMatrix xin, NumericVector yin, NumericVector cin, NumericVector uin, double lambda1, double lambda2, NumericVector pf1, NumericVector pf2, NumericVector delta_init, double delta_0_init, double gamma_init, double eps, bool standardize, double maxit);
+RcppExport SEXP _gtobitnet_gtobitnet_innerC(SEXP xinSEXP, SEXP yinSEXP, SEXP cinSEXP, SEXP uinSEXP, SEXP lambda1SEXP, SEXP lambda2SEXP, SEXP pf1SEXP, SEXP pf2SEXP, SEXP delta_initSEXP, SEXP delta_0_initSEXP, SEXP gamma_initSEXP, SEXP epsSEXP, SEXP standardizeSEXP, SEXP maxitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -90,21 +90,21 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
     Rcpp::traits::input_parameter< bool >::type standardize(standardizeSEXP);
     Rcpp::traits::input_parameter< double >::type maxit(maxitSEXP);
-    rcpp_result_gen = Rcpp::wrap(tobitnet_innerC(xin, yin, cin, uin, lambda1, lambda2, pf1, pf2, delta_init, delta_0_init, gamma_init, eps, standardize, maxit));
+    rcpp_result_gen = Rcpp::wrap(gtobitnet_innerC(xin, yin, cin, uin, lambda1, lambda2, pf1, pf2, delta_init, delta_0_init, gamma_init, eps, standardize, maxit));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_tobitnet_LprimeC", (DL_FUNC) &_tobitnet_LprimeC, 5},
-    {"_tobitnet_logL1", (DL_FUNC) &_tobitnet_logL1, 4},
-    {"_tobitnet_LprimeC2", (DL_FUNC) &_tobitnet_LprimeC2, 6},
-    {"_tobitnet_logL2", (DL_FUNC) &_tobitnet_logL2, 5},
-    {"_tobitnet_tobitnet_innerC", (DL_FUNC) &_tobitnet_tobitnet_innerC, 14},
+    {"_gtobitnet_LprimeC", (DL_FUNC) &_gtobitnet_LprimeC, 5},
+    {"_gtobitnet_logL1", (DL_FUNC) &_gtobitnet_logL1, 4},
+    {"_gtobitnet_LprimeC2", (DL_FUNC) &_gtobitnet_LprimeC2, 6},
+    {"_gtobitnet_logL2", (DL_FUNC) &_gtobitnet_logL2, 5},
+    {"_gtobitnet_gtobitnet_innerC", (DL_FUNC) &_gtobitnet_gtobitnet_innerC, 14},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_tobitnet(DllInfo *dll) {
+RcppExport void R_init_gtobitnet(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

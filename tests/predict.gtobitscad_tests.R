@@ -1,5 +1,5 @@
-#Tests for predict.tobitscad
-library(tobitnet)
+#Tests for predict.gtobitscad
+library(gtobitnet)
 
 set.seed(2022)
 n = 100
@@ -10,7 +10,7 @@ x.test = vapply(1:p, function(i) rnorm(n, mean = 1, sd = 1.5), FUN.VALUE = numer
 y = -5 + x%*%c(5, 1, 2, 0.5, 0.1, rep(0, p - 5)) + rnorm(n,0,1)
 y = pmax(y, 1)
 
-tsout1 = tobitscad(x = x, y = y, c = 1)
+tsout1 = gtobitscad(x = x, y = y, c = 1)
 
 #Default arguments work
 tsout_pred1 = predict(tsout1, newx = x.test)
@@ -20,7 +20,7 @@ is.numeric(tsout_pred1)
 all( is.finite(tsout_pred1) )
 nrow(tsout_pred1) == nrow(x.test)
 ncol(tsout_pred1) == length(tsout1$lambda)
-#c from tobitnet passes to predict.tobitnet
+#c from gtobitnet passes to predict.gtobitnet
 min(tsout_pred1) == 1
 
 #Accepts a new lambda1
@@ -38,7 +38,7 @@ ncol(tsout_pred2) == 2
 min(tsout_pred2) < 1
 
 #Including an intercept column does not impact results
-tsout1b = tobitscad(x = cbind(rep(1,n) ,x), y = y, c = 1)
+tsout1b = gtobitscad(x = cbind(rep(1,n) ,x), y = y, c = 1)
 
 tsout_pred1 = predict(tsout1, newx = x)
 tsout_pred1b = predict(tsout1b, newx = cbind(rep(1,n) ,x))

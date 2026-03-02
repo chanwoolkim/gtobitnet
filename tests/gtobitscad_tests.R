@@ -1,5 +1,5 @@
-#Tests for tobitscad
-library(tobitnet)
+#Tests for gtobitscad
+library(gtobitnet)
 
 set.seed(2022)
 n = 100
@@ -9,8 +9,8 @@ y = 3 + x%*%c(5, 1, 2, 0.5, 0.1, rep(0, p - 5)) + rnorm(n,0,1)
 y = pmax(y, 0)
 
 #Works with user-provided lambda1
-tsout1 <- tobitscad(x = x, y = y, lambda = 0.1)
-class(tsout1) == "tobitscad"
+tsout1 <- gtobitscad(x = x, y = y, lambda = 0.1)
+class(tsout1) == "gtobitscad"
 length(tsout1) == 8
 
 is.numeric(tsout1$sigma)
@@ -33,8 +33,8 @@ tsout1$c == 0
 
 #Works when x is a data frame
 x.df = data.frame(x)
-tsout1 <- tobitscad(x = x.df, y = y, lambda = 0.1)
-class(tsout1) == "tobitscad"
+tsout1 <- gtobitscad(x = x.df, y = y, lambda = 0.1)
+class(tsout1) == "gtobitscad"
 length(tsout1) == 8
 
 is.numeric(tsout1$sigma)
@@ -56,8 +56,8 @@ tsout1$lambda == 0.1
 tsout1$c == 0
 
 #Works with different c, lambda, a, iter
-tsout1 <- tobitscad(x = x, y = pmax(y,5), c = 5, a = 3.7, iter = 4, lambda = c(0.2, 0.3) )
-class(tsout1) == "tobitscad"
+tsout1 <- gtobitscad(x = x, y = pmax(y,5), c = 5, a = 3.7, iter = 4, lambda = c(0.2, 0.3) )
+class(tsout1) == "gtobitscad"
 length(tsout1) == 8
 
 is.numeric(tsout1$sigma)
@@ -79,7 +79,7 @@ all.equal(tsout1$lambda, c(0.2, 0.3))
 tsout1$c == 5
 
 #Default arguments work
-tsout1 <- tobitscad(x = x, y = y)
+tsout1 <- gtobitscad(x = x, y = y)
 is.numeric(tsout1$sigma)
 all(is.finite(tsout1$sigma))
 all(tsout1$sigma > 0)
@@ -101,10 +101,10 @@ all(is.finite(tsout1$lambda))
 tsout1$c == 0
 
 #Works with standardize
-tsout1sF <- tobitscad(x = x, y = y, lambda = 0.2, standardize = F)
+tsout1sF <- gtobitscad(x = x, y = y, lambda = 0.2, standardize = F)
 
 #Intercept column does not impact model fitting
-tsout1b <- tobitscad(x = cbind(rep(1,n) ,x), y = y)
+tsout1b <- gtobitscad(x = cbind(rep(1,n) ,x), y = y)
 all.equal(tsout1$sigma, tsout1b$sigma)
 all.equal(tsout1$b0, tsout1b$b0)
 all.equal(tsout1$beta, tsout1b$beta[-1,])
@@ -115,7 +115,7 @@ all.equal( ncol(tsout1$beta), ncol(tsout1b$beta))
 y = x%*%c(3, rep(0,4), 3, rep(0,4)) + rnorm(n,0,10)
 
 y = pmax(y, 0)
-tsout1 <- tobitscad(x = x, y = y)
+tsout1 <- gtobitscad(x = x, y = y)
 is.numeric(tsout1$sigma)
 all(is.finite(tsout1$sigma))
 all(tsout1$sigma > 0)

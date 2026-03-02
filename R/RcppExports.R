@@ -2,22 +2,22 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 LprimeC <- function(xj, y, d, r, gamma) {
-    .Call('_tobitnet_LprimeC', PACKAGE = 'tobitnet', xj, y, d, r, gamma)
+    .Call('_gtobitnet_LprimeC', PACKAGE = 'gtobitnet', xj, y, d, r, gamma)
 }
 
 logL1 <- function(y, d, r, gamma) {
-    .Call('_tobitnet_logL1', PACKAGE = 'tobitnet', y, d, r, gamma)
+    .Call('_gtobitnet_logL1', PACKAGE = 'gtobitnet', y, d, r, gamma)
 }
 
 LprimeC2 <- function(xj, y, status, r, gamma, right) {
-    .Call('_tobitnet_LprimeC2', PACKAGE = 'tobitnet', xj, y, status, r, gamma, right)
+    .Call('_gtobitnet_LprimeC2', PACKAGE = 'gtobitnet', xj, y, status, r, gamma, right)
 }
 
 logL2 <- function(y, status, r, gamma, right) {
-    .Call('_tobitnet_logL2', PACKAGE = 'tobitnet', y, status, r, gamma, right)
+    .Call('_gtobitnet_logL2', PACKAGE = 'gtobitnet', y, status, r, gamma, right)
 }
 
-tobitnet_innerC <- function(xin, yin, cin, uin, lambda1, lambda2, pf1, pf2, delta_init, delta_0_init = 0, gamma_init = 1, eps = 1e-7, standardize = TRUE, maxit = 1e6) {
-    .Call('_tobitnet_tobitnet_innerC', PACKAGE = 'tobitnet', xin, yin, cin, uin, lambda1, lambda2, pf1, pf2, delta_init, delta_0_init, gamma_init, eps, standardize, maxit)
+gtobitnet_innerC <- function(xin, yin, cin, uin, lambda1, lambda2, pf1, pf2, delta_init, delta_0_init = 0, gamma_init = 1, eps = 1e-7, standardize = TRUE, maxit = 1e6) {
+    .Call('_gtobitnet_gtobitnet_innerC', PACKAGE = 'gtobitnet', xin, yin, cin, uin, lambda1, lambda2, pf1, pf2, delta_init, delta_0_init, gamma_init, eps, standardize, maxit)
 }
 

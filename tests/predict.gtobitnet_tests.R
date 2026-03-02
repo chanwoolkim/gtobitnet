@@ -1,5 +1,5 @@
-#Tests for predict.tobitnet
-library(tobitnet)
+#Tests for predict.gtobitnet
+library(gtobitnet)
 
 set.seed(2022)
 n = 100
@@ -10,7 +10,7 @@ x.test = vapply(1:p, function(i) rnorm(n, mean = 1, sd = 1.5), FUN.VALUE = numer
 y = -5 + x%*%c(5, 1, 2, 0.5, 0.1, rep(0, p - 5)) + rnorm(n,0,1)
 y = pmax(y, 1)
 
-tnout1 = tobitnet(x = x, y = y, c = 1)
+tnout1 = gtobitnet(x = x, y = y, c = 1)
 
 #Default arguments work
 tnout_pred1 = predict(tnout1, newx = x.test)
@@ -20,7 +20,7 @@ is.numeric(tnout_pred1)
 all( is.finite(tnout_pred1) )
 nrow(tnout_pred1) == nrow(x.test)
 ncol(tnout_pred1) == length(tnout1$lambda1)
-#c from tobitnet passes to predict.tobitnet
+#c from gtobitnet passes to predict.gtobitnet
 min(tnout_pred1) == 1
 
 #Accepts a new lambda1
@@ -38,7 +38,7 @@ ncol(tnout_pred2) == 2
 min(tnout_pred2) < 1
 
 #Including an intercept column does not impact results
-tnout1b = tobitnet(x = cbind(rep(1,n) ,x), y = y, c = 1)
+tnout1b = gtobitnet(x = cbind(rep(1,n) ,x), y = y, c = 1)
 
 tnout_pred1 = predict(tnout1, newx = x)
 tnout_pred1b = predict(tnout1b, newx = cbind(rep(1,n) ,x))

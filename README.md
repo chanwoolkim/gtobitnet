@@ -1,12 +1,12 @@
-# Penalized Tobit Regression
+# Penalized gTobit Regression
 
-The `tobitnet` package provides methods for fitting penalized Tobit models: 
+The `gtobitnet` package provides methods for fitting penalized gTobit models: 
 
-- `tobitnet` fits the Tobit model with a weighted elastic net penalty using generalized coordinate descent
-- `tobitscad` fits the Tobit model with a SCAD penalty using a local linear approximation algorithm 
+- `gtobitnet` fits the gTobit model with a weighted elastic net penalty using generalized coordinate descent
+- `gtobitscad` fits the gTobit model with a SCAD penalty using a local linear approximation algorithm 
 
 See Jacobson and Zou (2023) for details.
 
 ## References
 
-Jacobson, T. and Zou, H. (2023), "High-Dimensional Censored Regression via the Penalized Tobit Likelihood," *Journal of Business and Economic Statistics,* DOI:10.1080/07350015.2023.2182309
+Jacobson, T. and Zou, H. (2023), "High-Dimensional Censored Regression via the Penalized gTobit Likelihood," *Journal of Business and Economic Statistics,* DOI:10.1080/07350015.2023.2182309

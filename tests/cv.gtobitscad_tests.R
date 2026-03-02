@@ -1,5 +1,5 @@
-#Tests for cv.tobitscad
-library(tobitnet)
+#Tests for cv.gtobitscad
+library(gtobitnet)
 
 set.seed(2022)
 n = 100
@@ -10,8 +10,8 @@ y = 3 + x%*%c(5, 1, 2, 0.5, 0.1, rep(0, p - 5)) + rnorm(n,0,1)
 y = pmax(y, 0)
 
 #Default arguments work
-tscv1 = cv.tobitscad(x, y)
-class(tscv1) == "cv.tobitscad"
+tscv1 = cv.gtobitscad(x, y)
+class(tscv1) == "cv.gtobitscad"
 length(tscv1) == 7
 
 is.numeric(tscv1$cvm)
@@ -39,8 +39,8 @@ length(tscv1$lambda.1se) == 1
 
 #Works when x is a data frame
 x.df = data.frame(x)
-tscv1 = cv.tobitscad(x.df, y)
-class(tscv1) == "cv.tobitscad"
+tscv1 = cv.gtobitscad(x.df, y)
+class(tscv1) == "cv.gtobitscad"
 length(tscv1) == 7
 
 is.numeric(tscv1$cvm)
@@ -67,8 +67,8 @@ tscv1$lambda.1se > 0
 length(tscv1$lambda.1se) == 1
 
 #Works with user-provided lambda
-tscv1 = cv.tobitscad(x,y, lambda = c(0.1, 0.2))
-class(tscv1) == "cv.tobitscad"
+tscv1 = cv.gtobitscad(x,y, lambda = c(0.1, 0.2))
+class(tscv1) == "cv.gtobitscad"
 length(tscv1) == 7
 
 is.numeric(tscv1$cvm)
@@ -92,8 +92,8 @@ tscv1$lambda.1se > 0
 length(tscv1$lambda.1se) == 1
 
 #Works with type.measure = "deviance"
-tscv1 = cv.tobitscad(x,y, lambda = c(0.1, 0.2), type.measure = "deviance")
-class(tscv1) == "cv.tobitscad"
+tscv1 = cv.gtobitscad(x,y, lambda = c(0.1, 0.2), type.measure = "deviance")
+class(tscv1) == "cv.gtobitscad"
 length(tscv1) == 7
 
 is.numeric(tscv1$cvm)
@@ -117,8 +117,8 @@ tscv1$lambda.1se > 0
 length(tscv1$lambda.1se) == 1
 
 #Works with type.measure = "mae"
-tscv1 = cv.tobitscad(x,y, lambda = c(0.1, 0.2), type.measure = "mae")
-class(tscv1) == "cv.tobitscad"
+tscv1 = cv.gtobitscad(x,y, lambda = c(0.1, 0.2), type.measure = "mae")
+class(tscv1) == "cv.gtobitscad"
 length(tscv1) == 7
 
 is.numeric(tscv1$cvm)
@@ -144,8 +144,8 @@ length(tscv1$lambda.1se) == 1
 #Works with different c, nfolds
 y = pmax(y,3)
 
-tscv1 = cv.tobitscad(x, y, c = 3, lambda = c(0.1, 0.2), nfolds = 5)
-class(tscv1) == "cv.tobitscad"
+tscv1 = cv.gtobitscad(x, y, c = 3, lambda = c(0.1, 0.2), nfolds = 5)
+class(tscv1) == "cv.gtobitscad"
 length(tscv1) == 7
 
 is.numeric(tscv1$cvm)
@@ -169,8 +169,8 @@ tscv1$lambda.1se > 0
 length(tscv1$lambda.1se) == 1
 
 #Works with constant column in some folds
-tscv1 = cv.tobitscad(cbind(c(rep(1, n-1) ,0), x), y, c = 3, lambda = c(0.1, 0.2), nfolds = 5)
-class(tscv1) == "cv.tobitscad"
+tscv1 = cv.gtobitscad(cbind(c(rep(1, n-1) ,0), x), y, c = 3, lambda = c(0.1, 0.2), nfolds = 5)
+class(tscv1) == "cv.gtobitscad"
 length(tscv1) == 7
 
 is.numeric(tscv1$cvm)

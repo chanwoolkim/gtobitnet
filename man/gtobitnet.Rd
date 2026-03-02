@@ -1,13 +1,13 @@
-\name{tobitnet}
-\alias{tobitnet}
-\title{Fit the Tobit model with a weighted elastic net penalty}
+\name{gtobitnet}
+\alias{gtobitnet}
+\title{Fit the gTobit model with a weighted elastic net penalty}
 
 \description{
-Fits the Tobit model with a weighted elastic net penalty. The solution path is computed for a sequence of values for the lasso penalty parameter \eqn{\lambda_1}{\lambda1} given a user-provided value for the ridge penalty parameter \eqn{\lambda_2}{\lambda2}.
+Fits the gTobit model with a weighted elastic net penalty. The solution path is computed for a sequence of values for the lasso penalty parameter \eqn{\lambda_1}{\lambda1} given a user-provided value for the ridge penalty parameter \eqn{\lambda_2}{\lambda2}.
 }
 
 \usage{
-tobitnet(x, y, c = 0, nlambda = 100, lambda.factor = ifelse(n/2 < nvars, 0.05, 0.01), 
+gtobitnet(x, y, c = 0, nlambda = 100, lambda.factor = ifelse(n/2 < nvars, 0.05, 0.01), 
           lambda1 = NULL, lambda2 = 0, pf1 = rep(1, nvars), pf2 = rep(1, nvars), 
           eps = 1e-7, standardize = TRUE, maxit = 1e6, early.stop = TRUE)
 }
@@ -25,11 +25,11 @@ tobitnet(x, y, c = 0, nlambda = 100, lambda.factor = ifelse(n/2 < nvars, 0.05, 0
   \item{eps}{threshold for the update step size in coordinate descent at which to declare convergence. Default is 1e-7.}
   \item{standardize}{boolean, if \code{TRUE} then \code{x} is standardized before fitting. Default is \code{TRUE}.}
   \item{maxit}{maximum number of coordinate descent cycles to attempt. Default is 1e6.}
-  \item{early.stop}{allow \code{tobitnet} to stop early in the \code{lambda1} sequence if the decrease in the deviance between \code{lambda1} values is negligible. Default is \code{TRUE}.}
+  \item{early.stop}{allow \code{gtobitnet} to stop early in the \code{lambda1} sequence if the decrease in the deviance between \code{lambda1} values is negligible. Default is \code{TRUE}.}
 }
 
 \value{
-An object with S3 class \dQuote{\code{tobitnet}}.
+An object with S3 class \dQuote{\code{gtobitnet}}.
  \item{call}{function call}
  \item{sigma}{vector of estimated sigma values of length \code{length(lambda1)}}
  \item{b0}{vector of estimated intercept values of length \code{length(lambda1)}}
@@ -42,20 +42,20 @@ An object with S3 class \dQuote{\code{tobitnet}}.
 }
 
 \details{
-The \code{tobitnet} function fits the Tobit model with a weighted elastic net penalty.
+The \code{gtobitnet} function fits the gTobit model with a weighted elastic net penalty.
 
 \subsection{Handling the predictors}{
-By default, \code{tobitnet} standardizes the predictors in \code{x} so that their coefficients are all equally penalized.  
+By default, \code{gtobitnet} standardizes the predictors in \code{x} so that their coefficients are all equally penalized.  
 If a predictor has zero variance, we set its coefficient to zero and exclude it from the model fitting procedure.  
 }
 
-\subsection{The Tobit model with a weighted elastic net penalty}{
+\subsection{The gTobit model with a weighted elastic net penalty}{
 To model the censored response \eqn{y}, we assume that there is a latent uncensored response  \eqn{y^*}{y*} and that it comes from a linear model.  That is, we assume \eqn{y = \max\{y^*,c\}}{y = max{y*,c}} where \eqn{y^* = x' \beta + \epsilon}{y* = x' \beta + \epsilon}, \eqn{\epsilon \sim N(0, \sigma^2)}{\epsilon ~ N(0, \sigma^2)}.  
-We use Olsen's (1978) reparameterization of the Tobit log likelihood, with \eqn{\delta_j = \beta_j/\sigma}{\deltaj = \betaj/\sigma} for \eqn{j = 0, 1, \ldots, p} and \eqn{\gamma = 1/\sigma}. We aim to minimize the following objective function:
+We use Olsen's (1978) reparameterization of the gTobit log likelihood, with \eqn{\delta_j = \beta_j/\sigma}{\deltaj = \betaj/\sigma} for \eqn{j = 0, 1, \ldots, p} and \eqn{\gamma = 1/\sigma}. We aim to minimize the following objective function:
 \deqn{R_n(\delta, \gamma) = - \frac{1}{n} \log L_n(\delta, \gamma) + \sum_{j = 1}^p \lambda_1 w_{1j} |\delta_j| + \lambda_2 w_{2j} \frac{\delta_j^2}{2} }{
 Rn(\delta, \gamma) = - 1/n log Ln(\delta, \gamma) + \sum \lambda1 w1j |\deltaj| + \lambda2 w2j \deltaj^2/2
 } 
-where \eqn{L_n(\delta, \gamma)}{Ln(\delta, \gamma)} denotes the reparameterized Tobit likelihood, the \eqn{w_{1j}}{w1j} are the penalty factors for the lasso penalty, and the \eqn{w_{2j}}{w2j} are the penalty factors for the ridge penalty.  
+where \eqn{L_n(\delta, \gamma)}{Ln(\delta, \gamma)} denotes the reparameterized gTobit likelihood, the \eqn{w_{1j}}{w1j} are the penalty factors for the lasso penalty, and the \eqn{w_{2j}}{w2j} are the penalty factors for the ridge penalty.  
 The weighted elastic net has ridge regression, the lasso, the elastic net, the adaptive lasso, and the adaptive elastic net as special cases. 
 }
 
@@ -65,13 +65,13 @@ We set the smallest value in the \eqn{\lambda_1}{\lambda1} sequence to be \eqn{\
   
 We use warm starts to speed up computation of the solution path.  That is, we use the estimated parameters for \eqn{\lambda_1[k]}{\lambda1[k]} as initial values for fitting the model with penalty \eqn{\lambda_1[k+1]}{\lambda1[k+1]} for \eqn{k = 1, \ldots,}\code{length(lambda1)}\eqn{-1}.  
 We also incorporate active set cycling into the GCD algorithm to speed up computation.  We start by cycling through all \eqn{p} coefficients, \eqn{\delta_j}{\deltaj}.  Any coefficients which remain at zero after this cycle are removed from the active set.  From there, we only cycle through coefficients in the active set until our convergence criterion is met---that is, until \eqn{\max_j (\hat{\delta}_j^{current} - \hat{\delta}_j^{new})^2 <}{max (\deltaj(current) - \deltaj(new))^2 < }\code{eps}.  
-As a final check, we run through all \eqn{p} coefficients again to see if the active set changes.  If it changes, we continue to cycle through updates until our convergence criterion is met again.  If it does not change, the algorithm ends and we check the KKT conditions to verify that the algorithm has converged to a minimizer (if the KKT conditions are \emph{not} satisifed, \code{tobitnet} issues a warning but still returns the solution).
+As a final check, we run through all \eqn{p} coefficients again to see if the active set changes.  If it changes, we continue to cycle through updates until our convergence criterion is met again.  If it does not change, the algorithm ends and we check the KKT conditions to verify that the algorithm has converged to a minimizer (if the KKT conditions are \emph{not} satisifed, \code{gtobitnet} issues a warning but still returns the solution).
   
 We compute the model \dQuote{deviance} which is given by \code{dev[k]}\eqn{= -2\log L_n(\delta, \gamma) }{= -2 log Ln(\delta, \gamma)} for each \eqn{\lambda_1[k]}{\lambda1[k]} (we exclude the log-likelihood for the saturated model from our expression for the deviance for technical reasons).  We stop early in the solution path if \eqn{|(dev[k] - dev[k+1])/nulldev| < 1e-5} (provided that \code{early.stop} is set to \code{TRUE}).
 }
 
 \subsection{Parameter estimates}{
-\code{tobitnet} returns \eqn{\beta} and \eqn{\sigma} rather than \eqn{\delta} and \eqn{\gamma} to faciliate comparison to parameter estimates from other regression models. 
+\code{gtobitnet} returns \eqn{\beta} and \eqn{\sigma} rather than \eqn{\delta} and \eqn{\gamma} to faciliate comparison to parameter estimates from other regression models. 
 }
 
 }
@@ -82,12 +82,12 @@ Tate Jacobson
 
 \references{
 Olsen, R.J. (1978) Note on the Uniqueness of the Maximum Likelihood Estimator for the
-Tobit Model. \emph{Econometrica}, \bold{46(5)}, 1211--1215.
+gTobit Model. \emph{Econometrica}, \bold{46(5)}, 1211--1215.
 
-Jacobson, T. and Zou, H. (2022) \emph{High-dimensional Censored Regression via the Penalized Tobit Likelihood.} Manuscript submitted for publication.
+Jacobson, T. and Zou, H. (2022) \emph{High-dimensional Censored Regression via the Penalized gTobit Likelihood.} Manuscript submitted for publication.
 }
 
-\seealso{\code{\link{predict.tobitnet}}, \code{\link{plot.tobitnet}}, and \code{\link{cv.tobitnet}}}
+\seealso{\code{\link{predict.gtobitnet}}, \code{\link{plot.gtobitnet}}, and \code{\link{cv.gtobitnet}}}
 
 \examples{
 n <- 100
@@ -97,8 +97,8 @@ y <- 3 + x\%*\%c(5, 1, 2, 0.5, 0.1, rep(0, p - 5)) + rnorm(n,0,1)
 y <- pmax(y, 0)
 
 #With a user-provided lambda1
-tnet1 <- tobitnet(x = x, y = y, lambda1 = 0.05)
+tnet1 <- gtobitnet(x = x, y = y, lambda1 = 0.05)
 
 #With lambda1 automatically generated
-tnet2 <- tobitnet(x = x, y = y)
+tnet2 <- gtobitnet(x = x, y = y)
 }
